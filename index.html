@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>じゃんけんゲーム</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Hiragino Sans', 'ヒラギノ角ゴシック', 'Meiryo', 'メイリオ', sans-serif;
+            background: linear-gradient(135deg, #FF6B9D 0%, #C44569 50%, #F8B500 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 30px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .game-container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, 
+                transparent 40%, 
+                rgba(255, 255, 255, 0.1) 50%, 
+                transparent 60%);
+            animation: shine 3s infinite;
+            pointer-events: none;
+        }
+
+        @keyframes shine {
+            0% { transform: rotate(45deg) translate(-100%, -100%); }
+            100% { transform: rotate(45deg) translate(100%, 100%); }
+        }
+
+        h1 {
+            color: #333;
+            font-size: clamp(2rem, 6vw, 3rem);
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 1;
+        }
+
+        .screen {
+            display: none;
+            position: relative;
+            z-index: 1;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        .countdown-text {
+            font-size: clamp(2rem, 8vw, 4rem);
+            font-weight: bold;
+            color: #FF6B9D;
+            margin: 40px 0;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.2);
+            animation: bounce 1s infinite alternate;
+        }
+
+        @keyframes bounce {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.1); }
+        }
+
+        .choices {
+            display: flex;
+            justify-content: space-around;
+            gap: 20px;
+            margin: 40px 0;
+            flex-wrap: wrap;
+        }
+
+        .choice-btn {
+            background: linear-gradient(145deg, #FFE5EC, #FFB3D1);
+            border: none;
+            border-radius: 20px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            min-width: 120px;
+            flex: 1;
+            max-width: 150px;
+        }
+
+        .choice-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(145deg, #FFB3D1, #FF6B9D);
+        }
+
+        .choice-btn:active {
+            transform: translateY(-2px);
+        }
+
+        .choice-btn img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            margin-bottom: 10px;
+        }
+
+        .choice-btn span {
+            display: block;
+            font-size: clamp(1.2rem, 4vw, 1.5rem);
+            font-weight: bold;
+            color: #333;
+        }
+
+        .result-area {
+            margin: 30px 0;
+        }
+
+        .result-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 40px;
+            margin: 30px 0;
+        }
+
+        .result-hands {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .hand-display {
+            text-align: center;
+        }
+
+        .hand-choice {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(145deg, #E8F8FF, #B3E5FC);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .hand-choice img {
+            width: 90px;
+            height: 90px;
+            object-fit: contain;
+        }
+
+        .hand-label {
+            font-size: clamp(1.2rem, 4vw, 1.5rem);
+            font-weight: bold;
+            color: #333;
+        }
+
+        .result-text {
+            font-size: clamp(2rem, 6vw, 3rem);
+            font-weight: bold;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.2);
+            min-width: 150px;
+            text-align: center;
+        }
+
+        .win { color: #4CAF50; }
+        .lose { color: #F44336; }
+        .draw { color: #FF9800; }
+
+        .continue-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: clamp(1.1rem, 3.5vw, 1.3rem);
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            min-width: 120px;
+        }
+
+        .btn-again {
+            background: linear-gradient(145deg, #81C784, #4CAF50);
+            color: white;
+        }
+
+        .btn-again:hover {
+            background: linear-gradient(145deg, #4CAF50, #388E3C);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-end {
+            background: linear-gradient(145deg, #FFB74D, #FF9800);
+            color: white;
+        }
+
+        .btn-end:hover {
+            background: linear-gradient(145deg, #FF9800, #F57C00);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        .final-result {
+            background: linear-gradient(145deg, #E1F5FE, #B3E5FC);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 20px 0;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .score-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 15px 0;
+            font-size: clamp(1.1rem, 3.5vw, 1.3rem);
+            font-weight: bold;
+            color: #333;
+        }
+
+        .score-number {
+            background: linear-gradient(145deg, #FFE5EC, #FFB3D1);
+            padding: 8px 16px;
+            border-radius: 15px;
+            min-width: 50px;
+        }
+
+        .start-btn {
+            background: linear-gradient(145deg, #81C784, #4CAF50);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            padding: 20px 40px;
+            font-size: clamp(1.3rem, 4vw, 1.6rem);
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            margin: 20px 0;
+        }
+
+        .start-btn:hover {
+            background: linear-gradient(145deg, #4CAF50, #388E3C);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        /* モバイル対応 */
+        @media (max-width: 768px) {
+            .game-container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            .choices {
+                gap: 10px;
+            }
+            
+            .choice-btn {
+                padding: 15px;
+                min-width: 100px;
+            }
+            
+            .choice-btn img {
+                width: 60px;
+                height: 60px;
+            }
+            
+            .result-container {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .continue-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 100%;
+                max-width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 id="gameTitle">じゃんけんゲーム</h1>
+        
+        <!-- スタート画面 -->
+        <div id="startScreen" class="screen active">
+            <button class="start-btn" onclick="startGame()">げーむをはじめる</button>
+        </div>
+        
+        <!-- カウントダウン画面 -->
+        <div id="countdownScreen" class="screen">
+            <div class="countdown-text" id="countdownText">さいしょはぐー</div>
+        </div>
+        
+        <!-- 選択画面 -->
+        <div id="choiceScreen" class="screen">
+            <p style="font-size: clamp(1.3rem, 4vw, 1.6rem); margin-bottom: 30px; color: #333; font-weight: bold;">
+                なにをだす？
+            </p>
+            <div class="choices">
+                <button class="choice-btn" onclick="playerChoice('gu')">
+                    <img src="images/gu.png" alt="ぐー">
+                    <span>ぐー</span>
+                </button>
+                <button class="choice-btn" onclick="playerChoice('choki')">
+                    <img src="images/choki.png" alt="ちょき">
+                    <span>ちょき</span>
+                </button>
+                <button class="choice-btn" onclick="playerChoice('pa')">
+                    <img src="images/pa.png" alt="ぱー">
+                    <span>ぱー</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- 結果画面 -->
+        <div id="resultScreen" class="screen">
+            <div class="result-container">
+                <div class="result-hands">
+                    <div class="hand-display">
+                        <div class="hand-choice">
+                            <img id="computerChoiceImg" src="" alt="">
+                        </div>
+                    </div>
+                    <div class="hand-display">
+                        <div class="hand-choice">
+                            <img id="playerChoiceImg" src="" alt="">
+                        </div>
+                        <div class="hand-label">あなた</div>
+                    </div>
+                </div>
+                
+                <div class="result-text" id="resultText"></div>
+            </div>
+            
+            <div class="continue-buttons">
+                <button class="btn btn-again" onclick="playAgain()">もういっかい</button>
+                <button class="btn btn-end" onclick="endGame()">おわる</button>
+            </div>
+        </div>
+        
+        <!-- 最終結果画面 -->
+        <div id="finalScreen" class="screen">
+            <h2 style="color: #333; margin-bottom: 30px; font-size: clamp(1.5rem, 5vw, 2rem);">
+                げーむしゅうりょう
+            </h2>
+            
+            <div class="final-result">
+                <div class="score-row">
+                    <span>かった</span>
+                    <span class="score-number" id="winCount">0</span>
+                </div>
+                <div class="score-row">
+                    <span>まけた</span>
+                    <span class="score-number" id="loseCount">0</span>
+                </div>
+                <div class="score-row">
+                    <span>あいこ</span>
+                    <span class="score-number" id="drawCount">0</span>
+                </div>
+                <div class="score-row" style="border-top: 2px solid #ddd; padding-top: 15px; margin-top: 20px;">
+                    <span>ぜんぶ</span>
+                    <span class="score-number" id="totalCount">0</span>
+                </div>
+            </div>
+            
+            <button class="start-btn" onclick="resetGame()">さいしょからやる</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
