@@ -163,13 +163,17 @@ function showComputerChoice() {
     const computerDisplay = document.getElementById('computerChoiceDisplay');
     const newImage = computerDisplay.querySelector('.new-image');
     const overlay = computerDisplay.querySelector('.reveal-overlay');
+    const originalImage = computerDisplay.querySelector('img:not(.new-image)');
+    
+    // 元のクエスチョンマーク画像を非表示にする
+    originalImage.classList.add('hide');
     
     // 新しい画像を設定
     newImage.src = choices[currentComputerChoice].img;
     newImage.alt = choices[currentComputerChoice].name;
     
     // 背景色を変更
-    computerDisplay.style.background = 'linear-gradient(145deg, #E8F8FF, #B3E5FC)';
+    computerDisplay.style.background = 'linear-gradient(145deg, #2196F3, #1976D2)';
     
     // 新しい画像を表示
     newImage.classList.add('show');
@@ -191,13 +195,13 @@ function showResult() {
             resultText.textContent = 'あなたのかち！';
             resultText.className = 'result-text win';
             gameStats.wins++;
-            playRandomAudio(['kati1.mp3', 'kati2.mp3', 'kati3.mp3']);
+            playRandomAudio(['make1.mp3', 'make2.mp3']);
             break;
         case 'lose':
             resultText.textContent = 'まけ';
             resultText.className = 'result-text lose';
             gameStats.losses++;
-            playRandomAudio(['make1.mp3', 'make2.mp3']);
+            playRandomAudio(['kati1.mp3', 'kati2.mp3', 'kati3.mp3']);
             break;
         case 'draw':
             resultText.textContent = 'あいこ';
@@ -266,6 +270,10 @@ function resetChoiceScreen() {
     newImage.classList.remove('show');
     newImage.src = '';
     overlay.classList.remove('reveal');
+    
+    // 元のクエスチョンマーク画像を再表示
+    const originalImage = computerDisplay.querySelector('img:not(.new-image)');
+    originalImage.classList.remove('hide');
 }
 
 // ゲーム終了
