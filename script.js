@@ -70,11 +70,12 @@ function startCountdown() {
             currentIndex++;
             setTimeout(nextPhase, phase.duration);
         } else {
-            // 「ぽん」の音声を再生してから選択画面へ
-            countdownText.textContent = 'ぽん';
-            playAudio('pon.mp3', () => {
+            // 「ぽん！」の音声を再生してから選択画面へ
+            countdownText.textContent = 'ぽん！';
+            playAudio('pon.mp3');
+            setTimeout(() => {
                 showScreen('choiceScreen');
-            });
+            }, 600); // 0.2秒短縮（800ms → 600ms）
         }
     }
     
@@ -88,23 +89,23 @@ function playerChoice(choice) {
     // コンピューターの選択を決定（プレイヤーに有利な確率）
     currentComputerChoice = getComputerChoice(choice);
     
-    // 結果を表示
-    showResult();
+    // アニメーション開始
+    startSelectionAnimation(choice);
 }
 
 // コンピューターの選択（プレイヤー有利な確率）
 function getComputerChoice(playerChoice) {
     const random = Math.random();
     
-    // プレイヤー勝利: 60%, 引き分け: 30%, プレイヤー敗北: 10%
-    if (random < 0.6) {
+    // プレイヤー勝利: 50%, 引き分け: 35%, プレイヤー敗北: 15%
+    if (random < 0.5) {
         // プレイヤーが勝つ選択
         switch (playerChoice) {
             case 'gu': return 'choki';      // グー > チョキ
             case 'choki': return 'pa';      // チョキ > パー
             case 'pa': return 'gu';         // パー > グー
         }
-    } else if (random < 0.9) {
+    } else if (random < 0.85) {
         // 引き分け
         return playerChoice;
     } else {
@@ -117,28 +118,77 @@ function getComputerChoice(playerChoice) {
     }
 }
 
-// 結果表示
-function showResult() {
-    // 画像と選択肢名の設定
+// 選択アニメーション開始
+function startSelectionAnimation(choice) {
+    const buttons = document.querySelectorAll('.choice-btn');
+    const selectedButton = document.querySelector(`[data-choice="${choice}"]`);
+    const instructionText = document.getElementById('instructionText');
+    
+    // 選択されたボタン以外を非表示にする
+    buttons.forEach(button => {
+        if (button !== selectedButton) {
+            button.classList.add('hidden');
+        } else {
+            button.classList.add('selected');
+        }
+    });
+    
+    // 指示テキストを変更
+    instructionText.textContent = '';
+    
+    // 「あなた」ラベルを表示
+    setTimeout(() => {
+        document.getElementById('playerLabel').style.opacity = '1';
+    }, 500);
+    
+    // コンピューターの手を表示
+    setTimeout(() => {
+        showComputerChoice();
+    }, 1000);
+    
+    // 結果を表示
+    setTimeout(() => {
+        showResult();
+    }, 1500);
+}
+
+// コンピューターの手を表示
+function showComputerChoice() {
     const choices = {
         'gu': { img: 'images/gu.png', name: 'ぐー' },
         'choki': { img: 'images/choki.png', name: 'ちょき' },
         'pa': { img: 'images/pa.png', name: 'ぱー' }
     };
     
-    // プレイヤーの選択を表示
-    document.getElementById('playerChoiceImg').src = choices[currentPlayerChoice].img;
+    const computerDisplay = document.getElementById('computerChoiceDisplay');
+    const newImage = computerDisplay.querySelector('.new-image');
+    const overlay = computerDisplay.querySelector('.reveal-overlay');
     
-    // コンピューターの選択を表示
-    document.getElementById('computerChoiceImg').src = choices[currentComputerChoice].img;
+    // 新しい画像を設定
+    newImage.src = choices[currentComputerChoice].img;
+    newImage.alt = choices[currentComputerChoice].name;
     
+    // 背景色を変更
+    computerDisplay.style.background = 'linear-gradient(145deg, #E8F8FF, #B3E5FC)';
+    
+    // 新しい画像を表示
+    newImage.classList.add('show');
+    
+    // カーテン効果でオーバーレイを上にスライド
+    setTimeout(() => {
+        overlay.classList.add('reveal');
+    }, 100);
+}
+
+// 結果表示
+function showResult() {
     // 勝敗判定
     const result = getGameResult();
     const resultText = document.getElementById('resultText');
     
     switch (result) {
         case 'win':
-            resultText.textContent = 'かち！';
+            resultText.textContent = 'あなたのかち！';
             resultText.className = 'result-text win';
             gameStats.wins++;
             playRandomAudio(['kati1.mp3', 'kati2.mp3', 'kati3.mp3']);
@@ -157,7 +207,11 @@ function showResult() {
             break;
     }
     
-    showScreen('resultScreen');
+    // 結果とボタンを表示
+    resultText.style.opacity = '1';
+    setTimeout(() => {
+        document.getElementById('continueButtons').style.opacity = '1';
+    }, 500);
 }
 
 // 勝敗判定
@@ -177,8 +231,41 @@ function getGameResult() {
 
 // もう一回プレイ
 function playAgain() {
+    // 画面をリセット
+    resetChoiceScreen();
     showScreen('countdownScreen');
     startCountdown();
+}
+
+// 選択画面をリセット
+function resetChoiceScreen() {
+    const buttons = document.querySelectorAll('.choice-btn');
+    const instructionText = document.getElementById('instructionText');
+    const playerLabel = document.getElementById('playerLabel');
+    const resultText = document.getElementById('resultText');
+    const continueButtons = document.getElementById('continueButtons');
+    const computerDisplay = document.getElementById('computerChoiceDisplay');
+    const newImage = computerDisplay.querySelector('.new-image');
+    const overlay = computerDisplay.querySelector('.reveal-overlay');
+    
+    // ボタンを元の状態に戻す
+    buttons.forEach(button => {
+        button.classList.remove('hidden', 'selected');
+    });
+    
+    // テキストを元に戻す
+    instructionText.textContent = 'なにをだす？';
+    
+    // 要素を非表示にする
+    playerLabel.style.opacity = '0';
+    resultText.style.opacity = '0';
+    continueButtons.style.opacity = '0';
+    
+    // コンピューターの表示を元に戻す
+    computerDisplay.style.background = '#333';
+    newImage.classList.remove('show');
+    newImage.src = '';
+    overlay.classList.remove('reveal');
 }
 
 // ゲーム終了
