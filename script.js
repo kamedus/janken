@@ -201,7 +201,7 @@ function showResult() {
             resultText.textContent = 'まけ';
             resultText.className = 'result-text lose';
             gameStats.losses++;
-            playRandomAudio(['kati1.mp3', 'kati2.mp3', 'kati3.mp3']);
+            playRandomAudio(['kati1.mp3', 'kati2.mp3']);
             break;
         case 'draw':
             resultText.textContent = 'あいこ';
