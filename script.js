@@ -195,13 +195,13 @@ function showResult() {
             resultText.textContent = 'あなたのかち！';
             resultText.className = 'result-text win';
             gameStats.wins++;
-            playRandomAudio(['make1.mp3', 'make2.mp3']);
+            playRandomAudio(['kati1.mp3', 'kati2.mp3']);
             break;
         case 'lose':
             resultText.textContent = 'まけ';
             resultText.className = 'result-text lose';
             gameStats.losses++;
-            playRandomAudio(['kati1.mp3', 'kati2.mp3']);
+            playRandomAudio(['make1.mp3', 'make2.mp3']);
             break;
         case 'draw':
             resultText.textContent = 'あいこ';
